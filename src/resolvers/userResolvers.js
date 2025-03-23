@@ -1,4 +1,4 @@
-const { registerUser, loginUser } = require('../use-cases/userUseCases');
+const { registerUser, loginUser } = require('../usecases/userUseCases');
 const { UserModel } = require('../adapters/userRepository');
 
 const resolvers = {

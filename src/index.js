@@ -1,5 +1,5 @@
 const { ApolloServer } = require('apollo-server');
-const typeDefs = require('./schema/userSchema');
+const typeDefs = require('./schemas/userSchema');
 const resolvers = require('./resolvers/userResolvers');
 const sequelize = require('./config/database');
 const { verifyToken } = require('./config/auth');
