@@ -1,50 +1,49 @@
-const User = require('../models/User');
-const { generateToken, bcrypt } = require('../config/auth');
+const { registerUser, loginUser } = require('../use-cases/userUseCases');
+const { UserModel } = require('../adapters/userRepository');
 
 const resolvers = {
     Query: {
-        users: (parent, args, context) => {
-            console.log("Usuário context:", context.user);
-            if (!context.user) throw new Error("Unauthorized");  // Verifica se o usuário está autenticado
-            return User.findAll();
-        },
-        user: (parent, args, context) => {
-            console.log("Usuário context:", context.user);
-            if (!context.user) throw new Error("Unauthorized");  // Verifica se o usuário está autenticado
-            return User.findByPk(args.id);
-        }
+      login: async (_, { email, password }) => {
+        const token = await loginUser({ email, password });
+        return { token };
+      },
+      me: async (_, __, context) => {
+        if (!context.user) throw new Error('Não autenticado');
+  
+        const user = await UserModel.findByPk(context.user.id);
+        if (!user) throw new Error('Usuário não encontrado');
+  
+        return user;
+      },
+      getUserById: async (_, { id }, context) => {
+        if (!context.user) throw new Error('Não autenticado');
+  
+        const user = await UserModel.findByPk(id);
+        if (!user) throw new Error('Usuário não encontrado');
+  
+        return user;
+      },
+      getAllUsers: async (_, __, context) => {
+        if (!context.user) throw new Error('Não autenticado');
+  
+        return await UserModel.findAll();
+      }
     },
     Mutation: {
-        register: async (parent, args, context) => {
-            console.log("Usuário context:", context.user);
-            if (!context.user) throw new Error("Unauthorized");
-            return await User.create(args);
-          },
-        login: (parent, args) => {
-            const { email, password } = args;
-        
-            const user = fakeUserDb.find(u => u.email === email && u.password === password);
-            if (!user) {
-                throw new Error("Credenciais inválidas");  // Mensagem mais clara
-            }
-        
-            // Criamos um ID fictício, já que fakeUserDb não tem um `id`
-            const userData = {
-                id: Math.random().toString(36).substring(7), // Gera um ID aleatório para testes
-                name: email.split('@')[0], // Pega o nome do email
-                email
-            };
-        
-            const token = generateToken(userData);
-        
-            return { token, user: userData };
-        }
-        
+      register: async (_, { name, email, password }) => {
+        const token = await registerUser({ name, email, password });
+        return { token };
+      },
+      deleteUser: async (_, { id }, context) => {
+        if (!context.user) throw new Error('Não autenticado');
+  
+        const user = await UserModel.findByPk(id);
+        if (!user) throw new Error('Usuário não encontrado');
+  
+        await user.destroy();
+        return "Usuário deletado com sucesso.";
+      }
     }
-};
-
-module.exports = resolvers;
-
-const fakeUserDb = [
-    { id: "1", email: "admin", password: "admin" }
-];
+  };
+  
+  module.exports = resolvers;
